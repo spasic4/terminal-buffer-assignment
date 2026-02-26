@@ -56,6 +56,22 @@ public class TerminalBuffer {
         setCursor(cursorX + dx, cursorY + dy);
     }
 
+    public void moveCursorUp(int n) {
+        setCursor(cursorX, cursorY - n);
+    }
+
+    public void moveCursorDown(int n) {
+        setCursor(cursorX, cursorY + n);
+    }
+
+    public void moveCursorRight(int n) {
+        setCursor(cursorX + n, cursorY);
+    }
+
+    public void moveCursorLeft(int n) {
+        setCursor(cursorX - n, cursorY);
+    }
+
     public int getCursorX() { return cursorX; }
     public int getCursorY() { return cursorY; }
 
