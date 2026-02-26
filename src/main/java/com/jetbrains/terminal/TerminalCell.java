@@ -18,6 +18,7 @@ public record TerminalCell(
         TerminalColor backgroundColor,
         byte styleFlags
 ) {
+    // Style bits
     public static final byte BOLD = 1 << 0;      // 0001
     public static final byte ITALIC = 1 << 1;    // 0010
     public static final byte UNDERLINE = 1 << 2; // 0100
