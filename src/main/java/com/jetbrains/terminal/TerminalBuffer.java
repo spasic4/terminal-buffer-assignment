@@ -13,8 +13,8 @@ import java.util.List;
  * - Supports line-wrapping during text insertion/writing.
  */
 public class TerminalBuffer {
-    private final int width;
-    private final int height;
+    private int width;
+    private int height;
     private final int maxScrollback;
 
     // Screen: The current editable grid.
@@ -237,5 +237,32 @@ public class TerminalBuffer {
         // Add current screen
         sb.append(getScreenAsString());
         return sb.toString();
+    }
+
+    /**
+     * Resizes the screen width and height.
+     * This basic resize truncates/expands right or down characters.
+     */
+    public void resize(int newWidth, int newHeight) {
+        if (newWidth <= 0 || newHeight <= 0) return;
+
+        TerminalCell[][] newScreen = new TerminalCell[newHeight][newWidth];
+
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+                if (y < this.height && x < this.width) {
+                    newScreen[y][x] = this.screen[y][x];
+                } else {
+                    newScreen[y][x] = TerminalCell.EMPTY;
+                }
+            }
+        }
+
+        this.cursorX = Math.min(cursorX, newWidth - 1);
+        this.cursorY = Math.min(cursorY, newHeight - 1);
+
+        this.width = newWidth;
+        this.height = newHeight;
+        this.screen = newScreen;
     }
 }

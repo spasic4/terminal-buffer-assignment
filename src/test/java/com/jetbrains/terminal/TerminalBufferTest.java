@@ -155,4 +155,21 @@ class TerminalBufferTest {
         assertEquals(2, buffer.getTotalLines(), "Total lines should be just the empty screen height (2)");
         assertEquals("     \n     \n", buffer.getFullHistoryAsString());
     }
+
+    @Test
+    void resize_shouldResizeExpandBuffer() {
+        // Arrange
+        TerminalBuffer buffer = new TerminalBuffer(2, 2, 10);
+        buffer.writeText("AB");
+        buffer.writeText("CD");
+
+        // Act
+        buffer.resize(4, 4);
+
+        // Assert
+        assertEquals(4, buffer.getScreenAsString().split("\n")[0].length());
+        assertEquals('A', buffer.getCharAt(0, 0));
+        assertEquals('C', buffer.getCharAt(0, 1));
+        assertEquals(' ', buffer.getCharAt(3, 3)); // New area is empty
+    }
 }
