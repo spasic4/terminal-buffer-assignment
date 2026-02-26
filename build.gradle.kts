@@ -2,7 +2,7 @@ plugins {
     id("java")
 }
 
-group = "org.rafstudent"
+group = "com.jetbrains.terminal"
 version = "1.0-SNAPSHOT"
 
 repositories {
