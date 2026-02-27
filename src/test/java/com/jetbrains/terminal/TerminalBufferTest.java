@@ -172,4 +172,40 @@ class TerminalBufferTest {
         assertEquals('C', buffer.getCharAt(0, 1));
         assertEquals(' ', buffer.getCharAt(3, 3)); // New area is empty
     }
+
+    @Test
+    void wideCharacter_shouldOccupyTwoCells_andSetRightHalfFlag() {
+        // Arrange
+        TerminalBuffer buffer = new TerminalBuffer(10, 5, 10);
+
+        // Act
+        buffer.writeText("中");
+
+        // Assert 1: Cursor move 2 times to right
+        assertEquals(2, buffer.getCursorX(), "Cursor should move 2 positions for a wide character");
+
+        // Assert 2: Check if left cell has wide character
+        TerminalCell leftCell = buffer.getAttributesAt(0, 0);
+        assertEquals('中', leftCell.character());
+        assertFalse(leftCell.hasStyle(TerminalCell.WIDE_RIGHT_HALF), "Left cell must NOT have the right-half flag");
+
+        // Assert 3: Check if right cell has '\0' character
+        TerminalCell rightCell = buffer.getAttributesAt(1, 0);
+        assertEquals('\0', rightCell.character(), "Right half should contain the null character placeholder");
+        assertTrue(rightCell.hasStyle(TerminalCell.WIDE_RIGHT_HALF), "Right half MUST have the WIDE_RIGHT_HALF flag");
+    }
+
+    @Test
+    void cursor_shouldSnapLeft_whenLandingOnWideCharacterRightHalf() {
+        // Arrange
+        TerminalBuffer buffer = new TerminalBuffer(10, 5, 10);
+        buffer.writeText("中"); // Cursor ends up on pos x = 2
+
+        // Act: Trying to set cursor on the wide right half position
+        buffer.setCursor(1, 0);
+
+        // Assert: Cursor automatically slides to column 0
+        assertEquals(0, buffer.getCursorX(), "Cursor should automatically snap to the left half (index 0)");
+        assertEquals(0, buffer.getCursorY());
+    }
 }
