@@ -9,6 +9,10 @@ public enum TerminalColor {
     BRIGHT_BLACK, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW,
     BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, BRIGHT_WHITE;
 
+    /**
+     * Utility method for future integration.
+     * Maps standard ANSI escape codes (e.g., from shell output) to internal terminal colors.
+     */
     public static TerminalColor fromAnsi(int code) {
         return switch (code) {
             case 30, 40 -> BLACK;
