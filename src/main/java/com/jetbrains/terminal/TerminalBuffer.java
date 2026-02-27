@@ -50,6 +50,12 @@ public class TerminalBuffer {
     public void setCursor(int x, int y) {
         this.cursorX = Math.max(0, Math.min(x, width - 1));
         this.cursorY = Math.max(0, Math.min(y, height - 1));
+
+        // BONUS: Wide character resolve
+        TerminalCell landedCell = screen[this.cursorY][this.cursorX];
+        if (landedCell.hasStyle(TerminalCell.WIDE_RIGHT_HALF)) {
+            this.cursorX = Math.max(0, this.cursorX - 1);
+        }
     }
 
     public void moveCursor(int dx, int dy) {
@@ -106,11 +112,12 @@ public class TerminalBuffer {
                 wide = true;
             }
 
-            screen[cursorY][cursorX] = new TerminalCell(toPrint.charAt(0), currentFg, currentBg, currentStyle, false);
+            screen[cursorY][cursorX] = new TerminalCell(toPrint.charAt(0), currentFg, currentBg, currentStyle);
 
             if (wide && cursorX < width - 1) {
                 moveCursorAfterWrite();
-                screen[cursorY][cursorX] = new TerminalCell('\0', currentFg, currentBg, currentStyle, true);
+                byte wideStyle = (byte) (currentStyle | TerminalCell.WIDE_RIGHT_HALF);
+                screen[cursorY][cursorX] = new TerminalCell('\0', currentFg, currentBg, wideStyle);
             }
 
             moveCursorAfterWrite();
@@ -128,7 +135,7 @@ public class TerminalBuffer {
     }
 
     private void insertSingleChar(char c) {
-        TerminalCell charToInsert = new TerminalCell(c, currentFg, currentBg, currentStyle, false);
+        TerminalCell charToInsert = new TerminalCell(c, currentFg, currentBg, currentStyle);
         TerminalCell pushedOut = null;
 
         // Shift characters in the current line to the right
@@ -143,7 +150,7 @@ public class TerminalBuffer {
      * Fills the entire current line with a specific character using current attributes.
      */
     public void fillLine(char c) {
-        TerminalCell fillCell = new TerminalCell(c, currentFg, currentBg, currentStyle, false);
+        TerminalCell fillCell = new TerminalCell(c, currentFg, currentBg, currentStyle);
         Arrays.fill(screen[cursorY], fillCell);
     }
 
@@ -226,7 +233,7 @@ public class TerminalBuffer {
         TerminalCell[] line = getRowInternal(row);
         StringBuilder sb = new StringBuilder();
         for (TerminalCell cell : line) {
-            if(!cell.isContinuation()) {
+            if(!cell.hasStyle(TerminalCell.WIDE_RIGHT_HALF)) {
                 sb.append(cell.character());
             }
         }
@@ -238,7 +245,7 @@ public class TerminalBuffer {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 TerminalCell cell = screen[y][x];
-                if(!cell.isContinuation()) {
+                if(!cell.hasStyle(TerminalCell.WIDE_RIGHT_HALF)) {
                     sb.append(cell.character());
                 }
             }
@@ -252,7 +259,7 @@ public class TerminalBuffer {
         // Add scrollback history
         for (TerminalCell[] line : scrollback) {
             for (TerminalCell cell : line) {
-                if(!cell.isContinuation()) {
+                if(!cell.hasStyle(TerminalCell.WIDE_RIGHT_HALF)) {
                     sb.append(cell.character());
                 }
             }

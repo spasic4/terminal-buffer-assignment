@@ -17,16 +17,16 @@ public record TerminalCell(
         char character,
         TerminalColor foregroundColor,
         TerminalColor backgroundColor,
-        byte styleFlags,
-        boolean isContinuation
+        byte styleFlags
 ) {
     // Style bits
-    public static final byte BOLD = 1 << 0;      // 0001
-    public static final byte ITALIC = 1 << 1;    // 0010
-    public static final byte UNDERLINE = 1 << 2; // 0100
+    public static final byte BOLD = 1 << 0;             // 0001
+    public static final byte ITALIC = 1 << 1;           // 0010
+    public static final byte UNDERLINE = 1 << 2;        // 0100
+    public static final byte WIDE_RIGHT_HALF = 1 << 3;  // 1000
 
     // Default empty cell
-    public static final TerminalCell EMPTY = new TerminalCell(' ', TerminalColor.DEFAULT, TerminalColor.DEFAULT, (byte) 0, false);
+    public static final TerminalCell EMPTY = new TerminalCell(' ', TerminalColor.DEFAULT, TerminalColor.DEFAULT, (byte) 0);
 
     public boolean hasStyle(byte style) {
         return (styleFlags & style) != 0;
