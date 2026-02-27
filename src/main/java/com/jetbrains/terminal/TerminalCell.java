@@ -11,12 +11,14 @@ package com.jetbrains.terminal;
  *   plus the default terminal theme color.
  * - Currently uses 'char' for simplicity; for full Unicode/Emoji support,
  *   this could be refactored to store char code as 'int'.
+ * - Continuation is true if the cell prior to this cell contains 'wide' character.
  */
 public record TerminalCell(
         char character,
         TerminalColor foregroundColor,
         TerminalColor backgroundColor,
-        byte styleFlags
+        byte styleFlags,
+        boolean isContinuation
 ) {
     // Style bits
     public static final byte BOLD = 1 << 0;      // 0001
@@ -24,9 +26,11 @@ public record TerminalCell(
     public static final byte UNDERLINE = 1 << 2; // 0100
 
     // Default empty cell
-    public static final TerminalCell EMPTY = new TerminalCell(' ', TerminalColor.DEFAULT, TerminalColor.DEFAULT, (byte) 0);
+    public static final TerminalCell EMPTY = new TerminalCell(' ', TerminalColor.DEFAULT, TerminalColor.DEFAULT, (byte) 0, false);
 
     public boolean hasStyle(byte style) {
         return (styleFlags & style) != 0;
     }
+
+
 }

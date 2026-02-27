@@ -94,8 +94,25 @@ public class TerminalBuffer {
      * Implements line wrapping and auto-scrolling.
      */
     public void writeText(String text) {
-        for (char c : text.toCharArray()) {
-            screen[cursorY][cursorX] = new TerminalCell(c, currentFg, currentBg, currentStyle);
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+
+            String toPrint = String.valueOf(c);
+            boolean wide = isWide(c);
+
+            if (Character.isHighSurrogate(c) && i + 1 < text.length()) {
+                toPrint = text.substring(i, i + 2);
+                i++; // Jump over low surrogate
+                wide = true;
+            }
+
+            screen[cursorY][cursorX] = new TerminalCell(toPrint.charAt(0), currentFg, currentBg, currentStyle, false);
+
+            if (wide && cursorX < width - 1) {
+                moveCursorAfterWrite();
+                screen[cursorY][cursorX] = new TerminalCell('\0', currentFg, currentBg, currentStyle, true);
+            }
+
             moveCursorAfterWrite();
         }
     }
@@ -111,7 +128,7 @@ public class TerminalBuffer {
     }
 
     private void insertSingleChar(char c) {
-        TerminalCell charToInsert = new TerminalCell(c, currentFg, currentBg, currentStyle);
+        TerminalCell charToInsert = new TerminalCell(c, currentFg, currentBg, currentStyle, false);
         TerminalCell pushedOut = null;
 
         // Shift characters in the current line to the right
@@ -126,7 +143,7 @@ public class TerminalBuffer {
      * Fills the entire current line with a specific character using current attributes.
      */
     public void fillLine(char c) {
-        TerminalCell fillCell = new TerminalCell(c, currentFg, currentBg, currentStyle);
+        TerminalCell fillCell = new TerminalCell(c, currentFg, currentBg, currentStyle, false);
         Arrays.fill(screen[cursorY], fillCell);
     }
 
@@ -156,7 +173,7 @@ public class TerminalBuffer {
      * Moves the top line of the screen into scrollback and shifts everything up.
      */
     private void scrollLineUp() {
-        // 1. Move the top line (index 0) to scrollback
+        // Move the top line (index 0) to scrollback
         TerminalCell[] topLine = screen[0];
         if (maxScrollback > 0) {
             if (scrollback.size() >= maxScrollback) {
@@ -165,12 +182,12 @@ public class TerminalBuffer {
             scrollback.add(topLine);
         }
 
-        // 2. Shift all lines up
+        // Shift all lines up
         for (int y = 0; y < height - 1; y++) {
             screen[y] = screen[y + 1];
         }
 
-        // 3. Create a fresh empty line at the bottom
+        // Create a fresh empty line at the bottom
         screen[height - 1] = new TerminalCell[width];
         Arrays.fill(screen[height - 1], TerminalCell.EMPTY);
     }
@@ -209,7 +226,9 @@ public class TerminalBuffer {
         TerminalCell[] line = getRowInternal(row);
         StringBuilder sb = new StringBuilder();
         for (TerminalCell cell : line) {
-            sb.append(cell.character());
+            if(!cell.isContinuation()) {
+                sb.append(cell.character());
+            }
         }
         return sb.toString();
     }
@@ -218,7 +237,10 @@ public class TerminalBuffer {
         StringBuilder sb = new StringBuilder();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                sb.append(screen[y][x].character());
+                TerminalCell cell = screen[y][x];
+                if(!cell.isContinuation()) {
+                    sb.append(cell.character());
+                }
             }
             sb.append("\n");
         }
@@ -230,7 +252,9 @@ public class TerminalBuffer {
         // Add scrollback history
         for (TerminalCell[] line : scrollback) {
             for (TerminalCell cell : line) {
-                sb.append(cell.character());
+                if(!cell.isContinuation()) {
+                    sb.append(cell.character());
+                }
             }
             sb.append("\n");
         }
@@ -264,5 +288,15 @@ public class TerminalBuffer {
         this.width = newWidth;
         this.height = newHeight;
         this.screen = newScreen;
+    }
+
+    // --- Helper Methods ---
+
+    private boolean isWide(char c) {
+        // Check for CJK extent and Surrogates
+        return Character.isHighSurrogate(c) ||
+                (c >= 0x1100 && (c <= 0x115f ||
+                        c >= 0x2e80 && c <= 0xa4cf ||
+                        c >= 0xac00 && c <= 0xd7a3));
     }
 }
